@@ -175,8 +175,9 @@ server <- function(input, output) {
                      color = ~pal(ilplants$ENERGY), stroke = FALSE, fillOpacity = 1, radius = 4) %>% 
     addLegend("bottomright", pal = pal, values = ~ENERGY, 
                   title = "Power Plant Energy Type", opacity = 1) %>%
+    setView(-89, 40, zoom = 7) %>%
     addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
-                             onClick = JS("function(btn, map){ map.setView([40,-89], 6);}")))
+                             onClick = JS("function(btn, map){ map.setView([40,-89], 7);}")))
   })
   
   output$usmap2000 <- renderLeaflet({
@@ -190,8 +191,9 @@ server <- function(input, output) {
                      color = ~pal(us2000$ENERGY), stroke = FALSE, fillOpacity = 1, radius = 4) %>%
     addLegend("bottomright", pal = pal, values = ~ENERGY,
               title = "Power Plant Energy Type", opacity = 1) %>%
+    setView(-95.665, 37.6, zoom = 4) %>%
     addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
-                             onClick = JS("function(btn, map){ map.setView([40,-89], 6);}")))
+                             onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
 
   })
   
@@ -206,8 +208,9 @@ server <- function(input, output) {
                        color = ~pal(us2010$ENERGY), stroke = FALSE, fillOpacity = 1, radius = 4) %>%
       addLegend("bottomright", pal = pal, values = ~ENERGY,
                 title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(-95.665, 37.6, zoom = 4) %>%
       addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
-                               onClick = JS("function(btn, map){ map.setView([40,-89], 6);}")))
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
   })
   
   output$usmap2018 <- renderLeaflet({
@@ -221,8 +224,9 @@ server <- function(input, output) {
                        color = ~pal(us2018$ENERGY), stroke = FALSE, fillOpacity = 1, radius = 4) %>%
       addLegend("bottomright", pal = pal, values = ~ENERGY,
                 title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(-95.665, 37.6, zoom = 4) %>%
       addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
-                               onClick = JS("function(btn, map){ map.setView([40,-89], 6);}")))
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
   })
 }
 
