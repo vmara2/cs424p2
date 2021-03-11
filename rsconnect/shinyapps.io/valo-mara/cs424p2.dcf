@@ -1,0 +1,13 @@
+name: cs424p2
+title: cs424p2
+username:
+account: valo-mara
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3772707
+bundleId: 4331069
+url: https://valo-mara.shinyapps.io/cs424p2/
+when: 1615470439.42316
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|eGRID2000_plant.xls|eGRID2010_Data.xls|egrid2018_data_v2.xlsx|plntv2.csv|README.md
