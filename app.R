@@ -76,7 +76,7 @@ ui <- dashboardPage(
                 column(2, checkboxGroupInput("energy_types", "Select Items to Filter",
                                              selections, selected = "ALL")
                 ),
-                column(8, box(title = "Power Plants Located in Illinois", solidHeader = TRUE, 
+                column(10, box(title = "Power Plants Located in Illinois", solidHeader = TRUE, 
                           width = 12, leafletOutput("ilmap", height = "80vh"))
                 )
       )), # ilmap end
@@ -105,14 +105,23 @@ ui <- dashboardPage(
       tabItem(tabName = "usview",
               fluidRow(
                 column(1, checkboxGroupInput("box3", "Select Items to Filter",
-                                   selections, selected = "COAL",
+                                   selections, selected = "ALL",
                                    width = NULL)
                 ),
                 column(11, tabBox(title = "US Map View", id = "tabset3",
                                   width = NULL,
-                                  tabPanel("2000", leafletOutput("usmap2000", height = "80vh")),
-                                  tabPanel("2010", leafletOutput("usmap2010", height = "80vh")),
-                                  tabPanel("2018", leafletOutput("usmap2018", height = "80vh")))
+                                  tabPanel("2000", leafletOutput("usmap2000", height = "70vh")),
+                                  tabPanel("2010", leafletOutput("usmap2010", height = "70vh")),
+                                  tabPanel("2018", leafletOutput("usmap2018", height = "70vh"))),
+                )
+              ),
+              fluidRow(
+                column(12, align = "center",
+                       sliderInput("range", "Power Generation Range:",
+                                    min = 0, max = 32000000,
+                                    value = c(0, 32000000),
+                                    width = "60vw",
+                                    post = "MWh")
                 )
       )), # usview end
       tabItem(tabName = "about",
@@ -140,6 +149,8 @@ server <- function(input, output) {
   })
   
   usview1Reactive <- reactive({
+    plnt00 <- plnt00[plnt00$TOTAL_GEN >= input$range[1] & plnt00$TOTAL_GEN <= input$range[2],]
+    
     if("ALL" %in% input$box3){plnt00}
     else if("RENEWABLE" %in% input$box3){plnt00[plnt00$ENERGY %in% renewable, ]}
     else if("NON-RENEWABLE" %in% input$box3){plnt00[plnt00$ENERGY %in% non_renewable, ]}
@@ -147,6 +158,8 @@ server <- function(input, output) {
   })
   
   usview2Reactive <- reactive({
+    plnt10 <- plnt10[plnt10$TOTAL_GEN >= input$range[1] & plnt10$TOTAL_GEN <= input$range[2],]
+    
     if("ALL" %in% input$box3){plnt10}
     else if("RENEWABLE" %in% input$box3){plnt10[plnt10$ENERGY %in% renewable, ]}
     else if("NON-RENEWABLE" %in% input$box3){plnt10[plnt10$ENERGY %in% non_renewable, ]}
@@ -154,6 +167,8 @@ server <- function(input, output) {
   })
   
   usview3Reactive <- reactive({
+    plnt18 <- plnt18[plnt18$TOTAL_GEN >= input$range[1] & plnt18$TOTAL_GEN <= input$range[2],]
+    
     if("ALL" %in% input$box3){plnt18}
     else if("RENEWABLE" %in% input$box3){plnt18[plnt18$ENERGY %in% renewable, ]}
     else if("NON-RENEWABLE" %in% input$box3){plnt18[plnt18$ENERGY %in% non_renewable, ]}
