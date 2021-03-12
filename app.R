@@ -58,6 +58,9 @@ renewable <- c("HYDRO", "BIO", "WIND", "SOLAR", "GEO")
 non_renewable <- c("COAL", "OIL", "GAS", "NUCLEAR", "OTHER")
 selections <- c("COAL", "OIL", "GAS", "NUCLEAR", "HYDRO", "BIO", "WIND", "SOLAR", "GEO", "OTHER",
                 "RENEWABLE", "NON-RENEWABLE", "ALL")
+states <- c(1:50)
+names(states) <- state.name
+centers <- state.center
 # ----- UI -----
 ui <- dashboardPage(
   dashboardHeader(title = "CS 424 Project 2"),
@@ -84,24 +87,33 @@ ui <- dashboardPage(
               fluidRow(
                 column(1, checkboxGroupInput("box1", "Select Items to Filter",
                                              selections, selected = "ALL",
-                                             width = NULL)
+                                             width = NULL),
+                       selectInput("states1", "Select State", states, selected = 13)
                 ),
                 column(5, tabBox(title = "Visualization 1", selected = "2000",
                                  width = NULL,
-                                 tabPanel("2000", leafletOutput("vis1tab2000")),
-                                 tabPanel("2010", leafletOutput("vis1tab2010")),
-                                 tabPanel("2018", leafletOutput("vis1tab2018")))
+                                 tabPanel("2000", leafletOutput("vis1tab2000", height = "65vh")),
+                                 tabPanel("2010", leafletOutput("vis1tab2010", height = "65vh")),
+                                 tabPanel("2018", leafletOutput("vis1tab2018", height = "65vh")))
                 ),
                 column(5, tabBox(title = "Visualization 2", selected = "2018",
                                  width = NULL,
-                                 tabPanel("2000", leafletOutput("vis2tab2000")),
-                                 tabPanel("2010", leafletOutput("vis2tab2010")),
-                                 tabPanel("2018", leafletOutput("vis2tab2018")))
+                                 tabPanel("2000", leafletOutput("vis2tab2000", height = "65vh")),
+                                 tabPanel("2010", leafletOutput("vis2tab2010", height = "65vh")),
+                                 tabPanel("2018", leafletOutput("vis2tab2018", height = "65vh")))
                 ),
                 column(1, checkboxGroupInput("box2", "Select Items to Filter",
-                                             selections, selected = "ALL")
+                                             selections, selected = "ALL"),
+                       selectInput("states2", "Select State", states, selected = 13)
                 )
-      )), # comp end
+              ),
+              fluidRow(
+                column(12, align = "center",
+                       checkboxGroupInput("boxBoth", "Dual Control",
+                                          selections, inline = TRUE)
+                       )
+              )
+      ), # comp end
       tabItem(tabName = "usview",
               fluidRow(
                 column(1, checkboxGroupInput("box3", "Select Items to Filter",
@@ -110,9 +122,9 @@ ui <- dashboardPage(
                 ),
                 column(11, tabBox(title = "US Map View", id = "tabset3",
                                   width = NULL,
-                                  tabPanel("2000", leafletOutput("usmap2000", height = "70vh")),
-                                  tabPanel("2010", leafletOutput("usmap2010", height = "70vh")),
-                                  tabPanel("2018", leafletOutput("usmap2018", height = "70vh"))),
+                                  tabPanel("2000", leafletOutput("usmap2000", height = "65vh")),
+                                  tabPanel("2010", leafletOutput("usmap2010", height = "65vh")),
+                                  tabPanel("2018", leafletOutput("usmap2018", height = "65vh"))),
                 )
               ),
               fluidRow(
@@ -132,7 +144,22 @@ ui <- dashboardPage(
   ) #dashboardBody end
 )
 # ----- SERVER -----
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  # observer for bottom checkbox on the compate page
+  # changes the output of the two checkboxes
+  # so that they match the bottom checkbox
+  observe({
+    x <- input$boxBoth
+    
+    # whenever x is updated, then other two will update
+    updateCheckboxGroupInput(session, "box1",
+                             selected = x
+    )
+    updateCheckboxGroupInput(session, "box2",
+                             selected = x
+    )
+  })
   # process the input from checkbox on Illinois map
   sourceReactive <- reactive({
     if("ALL" %in% input$energy_types){plnt18}
@@ -141,13 +168,50 @@ server <- function(input, output) {
     else{plnt18[plnt18$ENERGY %in% input$energy_types, ]}
   })
   
-  sourceReactive2 <- reactive({
-    if("ALL" %in% input$energy_types){plnt10}
-    else if("RENEWABLE" %in% input$energy_types){plnt10[plnt10$ENERGY %in% renewable, ]}
-    else if("NON-RENEWABLE" %in% input$energy_types){plnt10[plnt10$ENERGY %in% non_renewable, ]}
-    else{plnt10[plnt10$ENERGY %in% input$energy_types, ]}
+  # ---- Comparison Page Reactives ----
+  left2000Reactive <- reactive({
+    if("ALL" %in% input$box1){plnt00}
+    else if("RENEWABLE" %in% input$box1){plnt00[plnt00$ENERGY %in% renewable, ]}
+    else if("NON-RENEWABLE" %in% input$box1){plnt00[plnt00$ENERGY %in% non_renewable, ]}
+    else{plnt00[plnt00$ENERGY %in% input$box1, ]}
   })
   
+  left2010Reactive <- reactive({
+    if("ALL" %in% input$box1){plnt10}
+    else if("RENEWABLE" %in% input$box1){plnt10[plnt10$ENERGY %in% renewable, ]}
+    else if("NON-RENEWABLE" %in% input$box1){plnt10[plnt10$ENERGY %in% non_renewable, ]}
+    else{plnt10[plnt10$ENERGY %in% input$box1, ]}
+  })
+  
+  left2018Reactive <- reactive({
+    if("ALL" %in% input$box1){plnt18}
+    else if("RENEWABLE" %in% input$box1){plnt18[plnt18$ENERGY %in% renewable, ]}
+    else if("NON-RENEWABLE" %in% input$box1){plnt18[plnt18$ENERGY %in% non_renewable, ]}
+    else{plnt18[plnt18$ENERGY %in% input$box1, ]}
+  })
+  
+  right2000Reactive <- reactive(
+    if("ALL" %in% input$box2){plnt00}
+    else if("RENEWABLE" %in% input$box2){plnt00[plnt00$ENERGY %in% renewable, ]}
+    else if("NON-RENEWABLE" %in% input$box2){plnt00[plnt00$ENERGY %in% non_renewable, ]}
+    else{plnt00[plnt00$ENERGY %in% input$box2, ]}
+  )
+  
+  right2010Reactive <- reactive(
+    if("ALL" %in% input$box2){plnt10}
+    else if("RENEWABLE" %in% input$box2){plnt10[plnt10$ENERGY %in% renewable, ]}
+    else if("NON-RENEWABLE" %in% input$box2){plnt10[plnt10$ENERGY %in% non_renewable, ]}
+    else{plnt10[plnt10$ENERGY %in% input$box2, ]}
+  )
+  
+  right2018Reactive <- reactive(
+    if("ALL" %in% input$box2){plnt18}
+    else if("RENEWABLE" %in% input$box2){plnt18[plnt18$ENERGY %in% renewable, ]}
+    else if("NON-RENEWABLE" %in% input$box2){plnt18[plnt18$ENERGY %in% non_renewable, ]}
+    else{plnt18[plnt18$ENERGY %in% input$box2, ]}
+  )
+  
+  # ---- US Map Reactives
   usview1Reactive <- reactive({
     plnt00 <- plnt00[plnt00$TOTAL_GEN >= input$range[1] & plnt00$TOTAL_GEN <= input$range[2],]
     
@@ -194,7 +258,169 @@ server <- function(input, output) {
     addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
                              onClick = JS("function(btn, map){ map.setView([40,-89], 7);}")))
   })
+  # ---- Compare Outputs ----
+  output$vis1tab2000 <- renderLeaflet({
+    left2000 <- left2000Reactive()
+
+    pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
+                       left2000$ENERGY)
+    
+    leaflet(left2000) %>% 
+      addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopo") %>%
+      addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
+      addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
+                       color = ~pal(left2000$ENERGY), stroke = FALSE, fillOpacity = 1, 
+                       radius = ~scales::rescale(TOTAL_GEN, c(4,10)),
+                       popup = ~paste(NAME, "<br>",
+                                     "\n% Renewable: ", scales::percent(PERCENT_RENEWABLE), "<br>",
+                                     "\n% Non-Renewable: ", scales::percent(PERCENT_NON_RENEWABLE), "<br>",
+                                     ENERGY, "<br>")) %>%
+      addLegend("bottomright", pal = pal, values = ~ENERGY,
+                title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(centers$x[as.numeric(input$states1)], centers$y[as.numeric(input$states1)], zoom = 6) %>%
+      addLayersControl(baseGroups = c("CartoDB Positron", "Esri WorldTopo", "CartoDB Dark Matter"), 
+                       position = "topright") %>%
+      addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
+    
+  })
   
+  output$vis1tab2010 <- renderLeaflet({
+    left2010 <- left2010Reactive()
+    
+    pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
+                       left2010$ENERGY)
+    
+    leaflet(left2010) %>% 
+      addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopo") %>%
+      addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
+      addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
+                       color = ~pal(left2010$ENERGY), stroke = FALSE, fillOpacity = 1, 
+                       radius = ~scales::rescale(TOTAL_GEN, c(4,10)),
+                       popup = ~paste(NAME, "<br>",
+                                      "\n% Renewable: ", scales::percent(PERCENT_RENEWABLE), "<br>",
+                                      "\n% Non-Renewable: ", scales::percent(PERCENT_NON_RENEWABLE), "<br>",
+                                      ENERGY, "<br>")) %>%
+      addLegend("bottomright", pal = pal, values = ~ENERGY,
+                title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(centers$x[as.numeric(input$states1)], centers$y[as.numeric(input$states1)], zoom = 6) %>%
+      addLayersControl(baseGroups = c("CartoDB Positron", "Esri WorldTopo", "CartoDB Dark Matter"), 
+                       position = "topright") %>%
+      addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
+    
+  })
+  
+  output$vis1tab2018 <- renderLeaflet({
+    left2018 <- left2018Reactive()
+    
+    pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
+                       left2018$ENERGY)
+    
+    leaflet(left2018) %>% 
+      addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopo") %>%
+      addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
+      addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
+                       color = ~pal(left2018$ENERGY), stroke = FALSE, fillOpacity = 1, 
+                       radius = ~scales::rescale(TOTAL_GEN, c(4,10)),
+                       popup = ~paste(NAME, "<br>",
+                                      "\n% Renewable: ", scales::percent(PERCENT_RENEWABLE), "<br>",
+                                      "\n% Non-Renewable: ", scales::percent(PERCENT_NON_RENEWABLE), "<br>",
+                                      ENERGY, "<br>")) %>%
+      addLegend("bottomright", pal = pal, values = ~ENERGY,
+                title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(centers$x[as.numeric(input$states1)], centers$y[as.numeric(input$states1)], zoom = 6) %>%
+      addLayersControl(baseGroups = c("CartoDB Positron", "Esri WorldTopo", "CartoDB Dark Matter"), 
+                       position = "topright") %>%
+      addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
+    
+  })
+  
+  output$vis2tab2000 <- renderLeaflet({
+    right2000 <- right2000Reactive()
+    
+    pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
+                       right2000$ENERGY)
+    
+    leaflet(right2000) %>% 
+      addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopo") %>%
+      addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
+      addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
+                       color = ~pal(right2000$ENERGY), stroke = FALSE, fillOpacity = 1, 
+                       radius = ~scales::rescale(TOTAL_GEN, c(4,10)),
+                       popup = ~paste(NAME, "<br>",
+                                      "\n% Renewable: ", scales::percent(PERCENT_RENEWABLE), "<br>",
+                                      "\n% Non-Renewable: ", scales::percent(PERCENT_NON_RENEWABLE), "<br>",
+                                      ENERGY, "<br>")) %>%
+      addLegend("bottomright", pal = pal, values = ~ENERGY,
+                title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(centers$x[as.numeric(input$states2)], centers$y[as.numeric(input$states2)], zoom = 6) %>%
+      addLayersControl(baseGroups = c("CartoDB Positron", "Esri WorldTopo", "CartoDB Dark Matter"), 
+                       position = "topright") %>%
+      addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
+    
+  })
+  
+  output$vis2tab2010 <- renderLeaflet({
+    right2010 <- right2010Reactive()
+    
+    pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
+                       right2010$ENERGY)
+    
+    leaflet(right2010) %>% 
+      addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopo") %>%
+      addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
+      addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
+                       color = ~pal(right2010$ENERGY), stroke = FALSE, fillOpacity = 1, 
+                       radius = ~scales::rescale(TOTAL_GEN, c(4,10)),
+                       popup = ~paste(NAME, "<br>",
+                                      "\n% Renewable: ", scales::percent(PERCENT_RENEWABLE), "<br>",
+                                      "\n% Non-Renewable: ", scales::percent(PERCENT_NON_RENEWABLE), "<br>",
+                                      ENERGY, "<br>")) %>%
+      addLegend("bottomright", pal = pal, values = ~ENERGY,
+                title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(centers$x[as.numeric(input$states2)], centers$y[as.numeric(input$states2)], zoom = 6) %>%
+      addLayersControl(baseGroups = c("CartoDB Positron", "Esri WorldTopo", "CartoDB Dark Matter"), 
+                       position = "topright") %>%
+      addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
+    
+  })
+  
+  output$vis2tab2018 <- renderLeaflet({
+    right2018 <- right2018Reactive()
+    
+    pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
+                       right2018$ENERGY)
+    
+    leaflet(right2018) %>% 
+      addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopo") %>%
+      addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
+      addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
+                       color = ~pal(right2018$ENERGY), stroke = FALSE, fillOpacity = 1, 
+                       radius = ~scales::rescale(TOTAL_GEN, c(4,10)),
+                       popup = ~paste(NAME, "<br>",
+                                      "\n% Renewable: ", scales::percent(PERCENT_RENEWABLE), "<br>",
+                                      "\n% Non-Renewable: ", scales::percent(PERCENT_NON_RENEWABLE), "<br>",
+                                      ENERGY, "<br>")) %>%
+      addLegend("bottomright", pal = pal, values = ~ENERGY,
+                title = "Power Plant Energy Type", opacity = 1) %>%
+      setView(centers$x[as.numeric(input$states2)], centers$y[as.numeric(input$states2)], zoom = 6) %>%
+      addLayersControl(baseGroups = c("CartoDB Positron", "Esri WorldTopo", "CartoDB Dark Matter"), 
+                       position = "topright") %>%
+      addEasyButton(easyButton(icon = "fas fa-compress", title = "Reset View",
+                               onClick = JS("function(btn, map){ map.setView([37.6,-95.665], 4);}")))
+    
+  })
+  # ---- US Map Outputs ----
   output$usmap2000 <- renderLeaflet({
     us2000 <- usview1Reactive()
 
@@ -233,8 +459,8 @@ server <- function(input, output) {
     
     pal <- colorFactor(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"),
                        us2018$ENERGY)
-    
-    leaflet(us2018) %>% addProviderTiles(providers$CartoDB.Positron) %>%
+    leaflet(us2018) %>% 
+      addProviderTiles(providers$CartoDB.Positron) %>%
       addCircleMarkers(lat = ~LAT, lng = ~LON, label = ~NAME,
                        color = ~pal(us2018$ENERGY), stroke = FALSE, fillOpacity = 1, radius = 4) %>%
       addLegend("bottomright", pal = pal, values = ~ENERGY,
